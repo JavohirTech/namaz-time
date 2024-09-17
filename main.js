@@ -1,14 +1,16 @@
-const { app, Tray, Menu, nativeImage } = require('electron/main');
+const { app, Tray, Menu, nativeImage, Notification } = require('electron/main');
+require('dotenv').config();
 
 let tray;
 let fetchedData = {};
+let lastNotifiedNamaz = null;
 
 app.on("ready", () => {
     const icon = nativeImage.createFromDataURL('');
     tray = new Tray(icon);
 
     const namazTime = () => {
-        fetch("https://islomapi.uz/api/present/day?region=Toshkent")
+        fetch(`https://islomapi.uz/api/present/day?region=Toshkent`)
             .then(res => res.json())
             .then(data => {
                 console.log(data);
@@ -51,8 +53,16 @@ app.on("ready", () => {
         const nearestNamaz = getNearestNamazTime();
         if (nearestNamaz) {
             const now = new Date();
-            const currentTime = formatTime(now);
             tray.setTitle(`${nearestNamaz.name} - ${formatTime(nearestNamaz.time)}`);
+
+            const timeDifference = (nearestNamaz.time - now) / 60000;
+            if (timeDifference <= 5 && nearestNamaz.name !== lastNotifiedNamaz) {
+                new Notification({
+                    title: 'Namaz Reminder',
+                    body: `It's time for ${nearestNamaz.name} Namaz.`
+                }).show();
+                lastNotifiedNamaz = nearestNamaz.name;
+            }
         }
     };
 
@@ -63,7 +73,7 @@ app.on("ready", () => {
             { label: `Quyosh - ${times.quyosh || 'N/A'}`, type: 'normal' },
             { label: `Peshin - ${times.peshin || 'N/A'}`, type: 'normal', checked: true },
             { label: `Asr - ${times.asr || 'N/A'}`, type: 'normal' },
-            { label: `Shom Iftor - ${times.shom_iftor || 'N/A'}`, type: 'normal' },
+            { label: `Shom - ${times.shom_iftor || 'N/A'}`, type: 'normal' },
             { label: `Hufton - ${times.hufton || 'N/A'}`, type: 'normal' },
             { type: 'separator' },
             { label: 'Chiqish', role: 'quit' }
@@ -71,8 +81,17 @@ app.on("ready", () => {
         tray.setContextMenu(contextMenu);
     };
 
+    // tray.on('click', () => {
+    //     new Notification({
+    //         title: 'Namaz Reminder',
+    //         body: 'It\'s time for the next Namaz.'
+    //     }).show();
+    // });
+
     namazTime();
     setInterval(updateTime, 1000);
 
-    tray.setToolTip('This is my application.');
+    tray.setToolTip('Namaz Time by Felix-ITS');
 });
+
+app.dock.hide();
