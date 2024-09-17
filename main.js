@@ -1,9 +1,10 @@
-const { app, Tray, Menu, nativeImage, Notification } = require('electron/main');
+const {app, Tray, Menu, nativeImage, Notification} = require('electron/main');
 require('dotenv').config();
 
 let tray;
 let fetchedData = {};
 let lastNotifiedNamaz = null;
+const notificationLeadTime = 10;
 
 app.on("ready", () => {
     const icon = nativeImage.createFromDataURL('');
@@ -37,12 +38,12 @@ app.on("ready", () => {
         const now = new Date();
         const times = fetchedData.times;
         const namazTimes = [
-            { name: 'Tong Saharlik', time: parseTime(times.tong_saharlik) },
-            { name: 'Quyosh', time: parseTime(times.quyosh) },
-            { name: 'Peshin', time: parseTime(times.peshin) },
-            { name: 'Asr', time: parseTime(times.asr) },
-            { name: 'Shom Iftor', time: parseTime(times.shom_iftor) },
-            { name: 'Hufton', time: parseTime(times.hufton) }
+            {name: 'Saharlik', time: parseTime(times.tong_saharlik)},
+            {name: 'Quyosh', time: parseTime(times.quyosh)},
+            {name: 'Peshin', time: parseTime(times.peshin)},
+            {name: 'Asr', time: parseTime(times.asr)},
+            {name: 'Shom', time: parseTime(times.shom_iftor)},
+            {name: 'Xufton', time: parseTime(times.hufton)}
         ];
 
         const upcomingNamaz = namazTimes.find(namaz => namaz.time > now);
@@ -56,10 +57,10 @@ app.on("ready", () => {
             tray.setTitle(`${nearestNamaz.name} - ${formatTime(nearestNamaz.time)}`);
 
             const timeDifference = (nearestNamaz.time - now) / 60000;
-            if (timeDifference <= 5 && nearestNamaz.name !== lastNotifiedNamaz) {
+            if (timeDifference <= notificationLeadTime && nearestNamaz.name !== lastNotifiedNamaz) {
                 new Notification({
-                    title: 'Namaz Reminder',
-                    body: `It's time for ${nearestNamaz.name} Namaz.`
+                    title: 'Namoz vaqti',
+                    body: `Ey mo'minlar ${nearestNamaz.name} vaqti kirdi`
                 }).show();
                 lastNotifiedNamaz = nearestNamaz.name;
             }
@@ -69,24 +70,49 @@ app.on("ready", () => {
     const updateContextMenu = () => {
         const times = fetchedData.times || {};
         const contextMenu = Menu.buildFromTemplate([
-            { label: `Saharlik - ${times.tong_saharlik || 'N/A'}`, type: 'normal' },
-            { label: `Quyosh - ${times.quyosh || 'N/A'}`, type: 'normal' },
-            { label: `Peshin - ${times.peshin || 'N/A'}`, type: 'normal', checked: true },
-            { label: `Asr - ${times.asr || 'N/A'}`, type: 'normal' },
-            { label: `Shom - ${times.shom_iftor || 'N/A'}`, type: 'normal' },
-            { label: `Hufton - ${times.hufton || 'N/A'}`, type: 'normal' },
-            { type: 'separator' },
-            { label: 'Chiqish', role: 'quit' }
+            {
+                label: `Saharlik - ${times.tong_saharlik || 'N/A'}`,
+                type: "normal"
+            },
+            {
+                label: `Quyosh - ${times.quyosh || 'N/A'}`,
+                type: "normal"
+            },
+            {
+                label: `Peshin - ${times.peshin || 'N/A'}`,
+                type: "normal"
+            },
+            {
+                label: `Asr - ${times.asr || 'N/A'}`,
+                type: "normal"
+            },
+            {
+                label: `Shom - ${times.shom_iftor || 'N/A'}`,
+                type: "normal"
+            },
+            {
+                label: `Xufton - ${times.hufton || 'N/A'}`,
+                type: "normal"
+            },
+            {type: 'separator'},
+            {
+                label: "Hudud", submenu: [
+                    {label: "Namangan", type: "checkbox"},
+                    {label: "Toshkent", type: "checkbox"},
+                ]
+            },
+            {type: 'separator'},
+            {label: 'Chiqish', role: 'quit'}
         ]);
         tray.setContextMenu(contextMenu);
     };
 
-    // tray.on('click', () => {
-    //     new Notification({
-    //         title: 'Namaz Reminder',
-    //         body: 'It\'s time for the next Namaz.'
-    //     }).show();
-    // });
+    tray.on('click', () => {
+        new Notification({
+            title: 'Namaz Reminder',
+            body: 'It\'s time for the next Namaz.'
+        }).show();
+    });
 
     namazTime();
     setInterval(updateTime, 1000);
