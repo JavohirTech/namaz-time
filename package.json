@@ -6,12 +6,13 @@
     "start": "webpack serve --mode development",
     "electron": "electron .",
     "dev": "concurrently \"npm run start\" \"nodemon --watch main.js --exec 'electron .'\"",
-    "build": "electron-builder --mac --arm64"
+    "build": "electron-builder --mac --win --linux",
+    "build:clean": "rimraf dist"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Namaz Time Tracker",
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.4",
@@ -19,9 +20,10 @@
     "babel-loader": "^9.2.1",
     "concurrently": "^9.0.1",
     "electron": "^32.1.0",
-    "electron-builder": "^24.7.0",
+    "electron-builder": "^24.13.3",
     "html-webpack-plugin": "^5.6.0",
     "nodemon": "^3.0.1",
+    "rimraf": "^5.0.5",
     "webpack": "^5.94.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.1.0"
@@ -39,19 +41,54 @@
       "target": [
         "dmg"
       ],
+      "icon": "./public/icon.png",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
       "icon": "./public/icon.png"
     },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
     "asar": true,
-    "files": [
-      "build/**/*",
-      "node_modules/**/*",
-      "main.js"
+    "asarUnpack": [
+      "**/*.{node,dll}"
     ],
-    "extraResources": [
-      {
-        "from": "src/index.js",
-        "to": "main.js"
+    "files": [
+      "**/*",
+      "!**/*.{md,ts,tsx,test.js}",
+      "!**/node_modules/**/README*",
+      "!**/node_modules/**/readme*",
+      "!**/node_modules/**/test/**",
+      "!**/node_modules/**/tests/**",
+      "!**/node_modules/**/example/**",
+      "!**/node_modules/**/docs/**",
+      "!**/node_modules/**/*.map"
+    ],
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "compression": "maximum",
+    "removePackageScripts": true,
+    "npmRebuild": false
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "asar": true,
+        "protocols": [
+          {
+            "name": "Namaz Time",
+            "schemes": [
+              "namaz-time"
+            ]
+          }
+        ]
       }
-    ]
+    }
   }
 }
