@@ -1,4 +1,4 @@
-# Namaz time app
+# Namaz time app using Electron 
 
 Regions: 
 All Uzbekistan regions
